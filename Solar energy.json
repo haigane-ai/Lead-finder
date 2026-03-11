@@ -1,0 +1,1004 @@
+{
+  "name": "Solar energy",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -160
+      ],
+      "id": "b6bd5973-85d2-4df7-bf26-184568cf3c30",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM",
+          "mode": "list",
+          "cachedResultName": "Canadian Solar Installation Lead List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Person Searched "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -464,
+        -160
+      ],
+      "id": "1cfecf84-6796-4401-844d-dae3d582793e",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "57L1Pkx3p1mhoPR0",
+          "name": "Google Sheets OAuth2 API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "error found "
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawOutput = items[0].json.output || \"\";\n\ntry {\n  // 1. Find the JSON block even if there is messy text around it\n  const jsonMatch = rawOutput.match(/\\{[\\s\\S]*\\}|\\[[\\s\\S]*\\]/);\n  const cleanJsonString = jsonMatch ? jsonMatch[0].replace(/\\\\n/g, '') : rawOutput;\n\n  let parsedData = JSON.parse(cleanJsonString);\n  let results = [];\n  \n  // 2. Ensure we are handling an array of companies\n  const companies = Array.isArray(parsedData) ? parsedData : [parsedData];\n\n  companies.forEach(company => {\n    // 3. Find the 'People' list regardless of the label the AI used\n    const peopleList = company[\"Person Name\"] || company[\"person_name\"] || company[\"people\"] || [company];\n    const people = Array.isArray(peopleList) ? peopleList : [peopleList];\n    \n    people.forEach(person => {\n      results.push({\n        json: {\n          company_name: company[\"Company Name\"] || company[\"company\"] || \"N/A\",\n          website: company[\"Website\"] || company[\"website\"] || \"N/A\",\n          description: company[\"Description\"] || \"N/A\",\n          // SMARTER MAPPING: Look for any name/email/linkedin variations\n          name: person.name || person.full_name || \"Unknown\",\n          title: person.title || person.role || \"CEO/Owner\",\n          person_email: person.email || person.person_email || person.contact_email || \"N/A\",\n          linkedin: person.LinkedIn || person.linkedin || person.url || \"N/A\",\n          instagram: person.Instagram || person.instagram || \"N/A\",\n          phone_number: person.phone || company[\"Phone Number\"] || \"N/A\"\n        }\n      });\n    });\n  });\n\n  return results;\n\n} catch (error) {\n  return [{ json: { error: \"Parse Error\", raw: rawOutput.substring(0, 100) } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -432
+      ],
+      "id": "6e8ead67-f25f-452e-882c-30c91792fbf7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM",
+          "mode": "list",
+          "cachedResultName": "Canadian Solar Installation Lead List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 781310690,
+          "mode": "list",
+          "cachedResultName": "Sheet3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM/edit#gid=781310690"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company / Business Owner": "={{ $json.company_name }}",
+            "Name": "={{ $json.name }}",
+            "Title ": "={{ $json.title }}",
+            "LinkedIn": "={{ $json.linkedin }}",
+            "Instagram": "={{ $json.instagram }}",
+            "Website": "={{ $json.website }}",
+            "Phone Number ": "={{ $json.phone }}",
+            "Description ": "={{ $json.description }}",
+            "Email Address ": "={{ $('DAILY LIMIT ').item.json['Email Address'] }}",
+            "Person Email Address": "={{ $json.person_email }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Company / Business Owner",
+              "displayName": "Company / Business Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title ",
+              "displayName": "Title ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Address ",
+              "displayName": "Email Address ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number ",
+              "displayName": "Phone Number ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Person Email Address",
+              "displayName": "Person Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn",
+              "displayName": "LinkedIn",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Instagram",
+              "displayName": "Instagram",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description ",
+              "displayName": "Description ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        -464
+      ],
+      "id": "867eccbe-caff-443d-8366-cfe9818e45f6",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "57L1Pkx3p1mhoPR0",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        -144
+      ],
+      "id": "fd26c1c6-8566-4f9b-b4b9-c95cd52d71b3",
+      "name": "Wait",
+      "webhookId": "e04392b5-5e86-4982-9c8e-f113c190f570"
+    },
+    {
+      "parameters": {
+        "sendTo": "haigane.yassine1@gmail.com",
+        "subject": "n8n FIND PERSON ERROR - ***PLEASE CHECK",
+        "emailType": "text",
+        "message": "n8n FIND PERSON DAILY TASK COMPLETE - ***PLEASE CHECK \n\n\nhttps://shylastylez.app.n8n.cloud/workflow/n5MKEJrPCXpbfYiF/80554d?projectId=SfyHTZsffqZ0B0za",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        -400
+      ],
+      "id": "84fea7c2-db3e-4cea-87d3-dc491f392d69",
+      "name": "Send a message1",
+      "webhookId": "d36ebb12-0c9a-4705-b36d-fd17e5e92229",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rFq1xNzdapkeANvt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": "={{ $('Edit Fields').item.json['max_item '] }}"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -368
+      ],
+      "id": "827919dc-67ec-477e-8a64-5eea3458e4a6",
+      "name": "DAILY LIMIT "
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "695d6207-b59b-4d07-9004-20a85f464247",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "775b8878-142f-4466-90c9-3353f889193a",
+              "leftValue": "={{ $json[\"Person Searched\"] }}",
+              "rightValue": "TRUE",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -48,
+        -368
+      ],
+      "id": "23bb26f1-d4a6-4afb-bdce-d3d5a9380ac3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        240,
+        -384
+      ],
+      "id": "cb58a6af-dd12-4ca4-b20d-751d979e48aa",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        368
+      ],
+      "id": "2f1e6b3c-dd44-4327-9dba-688c76b482ee"
+    },
+    {
+      "parameters": {
+        "sendTo": "haigane.yassine1@gmail.com",
+        "subject": "n8n FIND PERSON ERROR - ***PLEASE CHECK",
+        "message": "n8n FIND PERSON ERROR - ***PLEASE CHECK \n https://shylastylez.app.n8n.cloud/workflow/n5MKEJrPCXpbfYiF/80554d?projectId=SfyHTZsffqZ0B0za",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        -144
+      ],
+      "id": "80554de6-9dae-40a1-9bd6-bbd7dcda0b11",
+      "name": "Send a message ON ERROR ",
+      "webhookId": "d36ebb12-0c9a-4705-b36d-fd17e5e92229",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rFq1xNzdapkeANvt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "{",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "0e1027f1-57f9-4ef3-b98c-dae8962183c0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "all good "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "15b1a802-c792-4006-a5fa-25cb3b46bbd0",
+                    "leftValue": "={{ $json.error }}",
+                    "rightValue": "too many requests",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "too many"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b9c097d5-4977-48b1-aa0e-74c6cff8cce2",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d29dfa62-2689-4ec9-8b76-6ecd715e8e00",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "Performing the search",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "61202072-7392-495a-ad6f-59bd70a2371a",
+                    "leftValue": "={{ $json.retryCount }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "give up"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        -336
+      ],
+      "id": "9bad694a-16f4-40c5-918d-2189d653ea87",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e9fa51de-ead3-4ec0-b6f3-edf7c4d3a1ba",
+              "name": "max_item ",
+              "value": 52,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -720,
+        -160
+      ],
+      "id": "c43c0463-b0a0-4d29-a8bc-7039a611a6cb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM",
+          "mode": "list",
+          "cachedResultName": "Canadian Solar Installation Lead List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwzqXeouZ8ilCOEidQmIIlda9jCX510YIWSKxOfKjcM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Person Searched ": "=True",
+            "row_number": "={{ $('DAILY LIMIT ').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Website URL",
+              "displayName": "Website URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Person Searched ",
+              "displayName": "Person Searched ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1744,
+        -464
+      ],
+      "id": "ae04ded9-5062-41dc-86ec-6a82c03b4e6a",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "57L1Pkx3p1mhoPR0",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=CRITICAL PROTOCOL:\n\nPrimary Tool: Start with Brave Search. If it returns a \"Rate Limit\" or \"429\" error, immediately switch to SerpApi.\n\nOne Search Rule: To save quota, combine all targets into one deep query (e.g., \"[Company] CEO Founder LinkedIn email\").\n\nNo Endless Loops: Do not perform more than 2 searches total across both tools. If you can't find a personal email, return \"N/A\"—do not search a third time.\n\nGOAL: You are a Senior Lead Gen Specialist. Find PERSONAL contact info for leaders of {{ $json[\"Company Name\"] }}.\n\nSEARCH STRATEGY:\n\nSearch for the specific names of the Founder/CEO/Owner.\n\nPrioritize finding their specific business emails (first.last@domain) and LinkedIn URLs.\n\nAvoid info@ or sales@ emails unless they are the only ones available.\n\nOUTPUT FORMAT (JSON):\nReturn an array. If you find multiple leaders, include multiple objects in the array.\n\n[\n  {\n    \"Company Name\": \"{{ $json[\"Company Name\"] }}\",\n    \"Website\": \"{{ $json[\"Website URL\"] }}\",\n    \"Description\": \"Business summary\",\n    \"Phone Number\": \"Direct line or N/A\",\n    \"Person Name\": [\n      {\n        \"name\": \"Full Name\",\n        \"title\": \"Exact Title\",\n        \"email\": \"Specific Email\",\n        \"LinkedIn\": \"LinkedIn URL\",\n        \"Instagram\": \"Handle\"\n      }\n    ]\n  }\n]"
+            },
+            {
+              "content": "=Company Name :  {{ $('DAILY LIMIT ').item.json['Company Name'] }}\nWebsite :{{ $('DAILY LIMIT ').item.json['Website URL'] }}\nDescription : {{ $('DAILY LIMIT ').item.json.Description }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        -144
+      ],
+      "id": "70f54097-3de4-442d-9fc4-2e170e1753c5",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CvmR3A8IND03JqEC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c2a06164-ea5e-4c46-ac87-3f0f619c3ac5",
+              "name": "output",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "8abb2635-adf7-4df1-81bd-c74cbd5ae7d9",
+              "name": "retryCount",
+              "value": "={{ ($json.retryCount || 0) + 1 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -144
+      ],
+      "id": "78b16d19-2422-44d0-bfb6-ce3209f95f53",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Stop Error "
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        -128
+      ],
+      "id": "cb7ea697-203a-4d47-b13a-c161b27dec81",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "sendTo": "haigane.yassine1@gmail.com",
+        "subject": "n8n FIND PERSON ERROR - ***PLEASE CHECK",
+        "message": "n8n FIND PERSONS **ERROR**\n\nAGENT 1 FAILED FOR SOME REASON, PLEASE CHECK \n\nhttps://shylastylez.app.n8n.cloud/workflow/n5MKEJrPCXpbfYiF/80554d?projectId=SfyHTZsffqZ0B0za",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -128
+      ],
+      "id": "e478dfc1-dc89-4bdd-9661-d3e574179c0a",
+      "name": "Send a message ON ERROR 5",
+      "webhookId": "d36ebb12-0c9a-4705-b36d-fd17e5e92229",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "rFq1xNzdapkeANvt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        960,
+        80
+      ],
+      "id": "150adc49-5e7c-4e5a-b28c-c2c1cfcb7729",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "WLV56gPGBalqIc1I",
+          "name": "SerpAPI account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "DAILY LIMIT ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message ON ERROR ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DAILY LIMIT ": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message ON ERROR 5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message ON ERROR 5": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "54a8870a-9ce8-4bfc-b559-f2c9426a2158",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d0c4c4ba2d7c082020b1f1d725b017038b8c504de407672d3e45c7d94c456fbf"
+  },
+  "id": "n5MKEJrPCXpbfYiF",
+  "tags": []
+}
